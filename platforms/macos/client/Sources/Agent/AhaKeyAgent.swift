@@ -42,6 +42,8 @@ final class AhaKeyAgent: NSObject, CBCentralManagerDelegate, CBPeripheralDelegat
 
     /// 等待下一次 status 回包的回调队列（用于 querySwitchState）
     private var statusWaiters: [(AgentDeviceStatus?) -> Void] = []
+    private let feishuAutoApprover = FeishuAutoApprover()
+    private var feishuAutoApproveTimer: DispatchSourceTimer?
 
     var onLog: ((String) -> Void)?
 
@@ -49,6 +51,7 @@ final class AhaKeyAgent: NSObject, CBCentralManagerDelegate, CBPeripheralDelegat
         self.socketPath = socketPath
         super.init()
         central = CBCentralManager(delegate: self, queue: nil)
+        startFeishuAutoApproveLoop()
     }
 
     // MARK: - Public
@@ -266,6 +269,22 @@ final class AhaKeyAgent: NSObject, CBCentralManagerDelegate, CBPeripheralDelegat
     private func emit(_ msg: String) {
         log.info("\(msg)")
         onLog?(msg)
+    }
+
+    // MARK: - Feishu auto approve
+
+    private func startFeishuAutoApproveLoop() {
+        let timer = DispatchSource.makeTimerSource(queue: DispatchQueue.global(qos: .utility))
+        timer.schedule(deadline: .now() + 1.2, repeating: .milliseconds(900))
+        timer.setEventHandler { [weak self] in
+            guard let self else { return }
+            let auto = (self.cachedSwitchState == 0)
+            _ = self.feishuAutoApprover.tickIfNeeded(autoMode: auto) { message in
+                self.emit(message)
+            }
+        }
+        feishuAutoApproveTimer = timer
+        timer.resume()
     }
 
     // MARK: - CBCentralManagerDelegate
