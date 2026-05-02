@@ -6,8 +6,9 @@ from enum import IntEnum
 
 
 class KeyType(IntEnum):
-    SHORTCUT = 0  # 快捷键 (HID keycodes列表, 修饰键也是keycode)
-    MACRO = 1     # 宏 (action+param序列)
+    SHORTCUT = 0           # 快捷键 (HID keycodes列表, 修饰键也是keycode)
+    MACRO = 1              # 宏 (action+param序列)
+    TERMINAL_AGENT = 2     # 终端云Agent审批 (Mode 3 专用: 仅 Key2/Key3 支持, 值为 0=同意/allow-once, 1=拒绝/deny)
 
 
 # HID 键码表 — 含修饰键和小键盘

@@ -38,6 +38,8 @@ from ..widgets.keyboard_view import KeyboardView
 
 
 _MODE0_DISPLAY_PRESETS = ("F18", "YES", "NO", "Enter")
+# Mode 3 预设: 终端云Agent审批模式 - Key1=语音, Key2=同意, Key3=拒绝, Key4=回车
+_MODE3_DISPLAY_PRESETS = ("Voice", "Allow", "Deny", "Enter")
 
 
 class UploadWorker(QThread):
@@ -251,16 +253,17 @@ class ModePage(QWidget):
         return bool(binding.description or binding.keycodes or binding.macro_data)
 
     def _effective_key_labels(self) -> list[str]:
+        """生成按键显示标签。Mode 0 和 Mode 3 有预设标签。"""
         labels: list[str] = []
         is_mode0 = self._config.mode_id == 0
+        is_mode3 = self._config.mode_id == 3
+        presets = _MODE0_DISPLAY_PRESETS if is_mode0 else (_MODE3_DISPLAY_PRESETS if is_mode3 else None)
+        
         for index, binding in enumerate(self._config.keys):
             label = binding.label
-            if (
-                is_mode0
-                and index < len(_MODE0_DISPLAY_PRESETS)
-                and not self._binding_has_real_value(binding)
-            ):
-                label = _MODE0_DISPLAY_PRESETS[index]
+            # Mode 0 和 Mode 3: 若按键未配置则显示预设标签
+            if presets and index < len(presets) and not self._binding_has_real_value(binding):
+                label = presets[index]
             labels.append(label)
         return labels
 
@@ -277,6 +280,7 @@ class ModePage(QWidget):
 
     def _on_key_selected(self, key_index: int):
         if 0 <= key_index < len(self._config.keys):
+            self.key_editor.set_mode_and_key(self._config.mode_id, key_index)
             self.key_editor.set_binding(self._config.keys[key_index])
 
     def _on_binding_changed(self, binding: KeyBinding):

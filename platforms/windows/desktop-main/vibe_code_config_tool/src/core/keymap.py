@@ -13,7 +13,7 @@ from .keycodes import KeyType, get_keycode_name, format_shortcut_label
 
 
 NUM_KEYS = 4
-NUM_MODES = 3
+NUM_MODES = 4  # Mode 0-3: 0=官方编程, 1=自定义, 2=自定义, 3=终端云Agent审批
 MAX_DESCRIPTION_LEN = 20
 MAX_KEY_DATA_LEN = 98
 
@@ -102,7 +102,7 @@ class ModeConfig:
 
 @dataclass
 class KeyboardConfig:
-    """键盘完整配置（3模式）"""
+    """键盘完整配置（4模式）"""
     name: str = "Default"
     modes: list[ModeConfig] = field(
         default_factory=lambda: [ModeConfig(mode_id=i) for i in range(NUM_MODES)]
